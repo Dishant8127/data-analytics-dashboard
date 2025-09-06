@@ -1,0 +1,21 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+class Config:
+    # Flask
+    FLASK_ENV = os.getenv("FLASK_ENV", "development")
+    SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key")
+
+    # PostgreSQL (OLTP only)
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "POSTGRES_DATABASE_URI",
+        "postgresql://postgres:dishant@localhost:5432/analytics_app"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Good practice to disable
+
+    # JWT Settings
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-secret-key")
+    JWT_ACCESS_TOKEN_EXPIRES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600))  # 1 hour

@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+clickhouse-driver
+pandas
+python-dotenv
+Flask-Caching[redis]
+Flask-Bcrypt
+Flask-JWT-Extended
+gunicorn
