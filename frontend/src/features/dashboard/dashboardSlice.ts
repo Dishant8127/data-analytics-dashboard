@@ -1,6 +1,8 @@
+// dashboardSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "../../services/api";
+
 
 interface KPIData {
   region: string;
@@ -12,7 +14,7 @@ interface DashboardState {
   loading: boolean;
   error: string | null;
   filters: {
-    dateRange: string;  
+    dateRange: string;
     region: string;
   };
 }
@@ -27,16 +29,19 @@ const initialState: DashboardState = {
   },
 };
 
-// ✅ Async action: fetch KPI summary with filters
-export const fetchKpis = createAsyncThunk(
+// ✅ Async action to fetch KPI data with current filters
+export const fetchKpis = createAsyncThunk<
+  KPIData[],
+  void,
+  { rejectValue: string; state: { dashboard: DashboardState } }
+>(
   "dashboard/fetchKpis",
   async (_, thunkAPI) => {
     try {
-      const state: any = thunkAPI.getState();
+      const state = thunkAPI.getState();
       const { dateRange, region } = state.dashboard.filters;
 
-      // Send filters as query params
-      const res = await api.get("/kpi-summary", {
+      const res = await api.get("/api/kpi-summary", {
         params: { dateRange, region },
       });
 
@@ -53,10 +58,7 @@ const dashboardSlice = createSlice({
   name: "dashboard",
   initialState,
   reducers: {
-    setFilters: (
-      state,
-      action: PayloadAction<{ dateRange: string; region: string }>
-    ) => {
+    setFilters: (state, action: PayloadAction<{ dateRange: string; region: string }>) => {
       state.filters = action.payload;
     },
   },
@@ -70,14 +72,12 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.kpis = action.payload;
       })
-      .addCase(fetchKpis.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(fetchKpis.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || "Unknown error";
       });
   },
 });
 
 export const { setFilters } = dashboardSlice.actions;
 export default dashboardSlice.reducer;
-
-

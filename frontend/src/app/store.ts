@@ -1,3 +1,4 @@
+// store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../features/user-auth/authSlice";
 import dashboardReducer from "../features/dashboard/dashboardSlice";

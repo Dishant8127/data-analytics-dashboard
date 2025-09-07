@@ -1,3 +1,4 @@
+// src/features/dashboard/components/KPIWidget.tsx
 type KPIProps = {
   title: string;
   value: string | number;
@@ -5,7 +6,13 @@ type KPIProps = {
 
 const KPIWidget = ({ title, value }: KPIProps) => {
   return (
-    <div style={{ border: "1px solid #ddd", padding: "1rem", borderRadius: "8px" }}>
+    <div style={{
+      border: "1px solid #ddd",
+      padding: "1rem",
+      borderRadius: "8px",
+      minWidth: "150px",
+      textAlign: "center"
+    }}>
       <h4>{title}</h4>
       <p style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{value}</p>
     </div>

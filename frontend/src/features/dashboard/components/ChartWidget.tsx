@@ -1,3 +1,4 @@
+// src/features/dashboard/components/ChartWidget.tsx
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../app/store";
 import {
@@ -20,13 +21,13 @@ const ChartWidget = () => {
   return (
     <div style={{ width: "100%", height: 300, marginTop: "2rem" }}>
       <h3>Sales by Region</h3>
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={kpis}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="region" />
           <YAxis />
           <Tooltip />
-          <Bar dataKey="total_sales" fill="#4f46e5" /> {/* Tailwind Indigo-600 */}
+          <Bar dataKey="total_sales" fill="#4f46e5" />
         </BarChart>
       </ResponsiveContainer>
     </div>

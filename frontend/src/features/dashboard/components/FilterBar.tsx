@@ -1,5 +1,6 @@
+// src/features/dashboard/components/FilterBar.tsx
 import { useDispatch, useSelector } from "react-redux";
-import type       { RootState, AppDispatch } from "../../../app/store";
+import type { RootState, AppDispatch } from "../../../app/store";
 import { setFilters, fetchKpis } from "../dashboardSlice";
 
 const FilterBar = () => {
@@ -7,17 +8,14 @@ const FilterBar = () => {
   const filters = useSelector((state: RootState) => state.dashboard.filters);
 
   const handleChange = (field: "dateRange" | "region", value: string) => {
-    // Update Redux filters
     const newFilters = { ...filters, [field]: value };
     dispatch(setFilters(newFilters));
-
-    // ✅ Trigger API fetch with updated filters
-    dispatch(fetchKpis());
+    dispatch(fetchKpis()); // ✅ Fetch updated KPIs immediately
   };
 
   return (
     <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-      {/* Date Range Filter */}
+      {/* Date Range Selector */}
       <label>
         Date Range:
         <select
@@ -31,7 +29,7 @@ const FilterBar = () => {
         </select>
       </label>
 
-      {/* Region Filter */}
+      {/* Region Selector */}
       <label>
         Region:
         <select

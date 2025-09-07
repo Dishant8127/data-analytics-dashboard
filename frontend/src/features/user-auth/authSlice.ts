@@ -1,3 +1,4 @@
+// authSlice.ts
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
@@ -8,7 +9,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  token: null,
+  token: localStorage.getItem("token"), // ✅ Persist token if already stored
   role: null,
 };
 
