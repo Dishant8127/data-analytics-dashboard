@@ -1,11 +1,12 @@
 # backend/app/auth/routes.py
+
+
+
+
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
-from werkzeug.security import check_password_hash
-from app.models import User  # make sure this points to your SQLAlchemy User model
-
-
-
+from app.models import User
+from app import db, bcrypt
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -15,19 +16,17 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    if not username or not password:
-        return jsonify({"msg": "Username and password are required"}), 400
-
-    # Fetch user from database
     user = User.query.filter_by(username=username).first()
+    if user and bcrypt.check_password_hash(user.password, password):
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
+        return jsonify({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "role": user.role
+        }), 200
 
-    # Check if user exists and password is correct
-    if user and check_password_hash(user.password, password):
-        # Create token (without role)
-        token = create_access_token(identity={"id": user.id})
-        return jsonify(access_token=token)
-
-    return jsonify({"msg": "Invalid credentials"}), 401
+    return jsonify({"msg": "Invalid username or password"}), 401
 
 
 

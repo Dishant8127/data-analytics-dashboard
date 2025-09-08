@@ -1,47 +1,47 @@
 // src/features/dashboard/components/FilterBar.tsx
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "../../../app/store";
-import { setFilters, fetchKpis } from "../dashboardSlice";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { fetchKpis } from "../dashboardSlice";
+import type { AppDispatch } from "../../../app/store";
 
 const FilterBar = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const filters = useSelector((state: RootState) => state.dashboard.filters);
 
-  const handleChange = (field: "dateRange" | "region", value: string) => {
-    const newFilters = { ...filters, [field]: value };
-    dispatch(setFilters(newFilters));
-    dispatch(fetchKpis()); // ✅ Fetch updated KPIs immediately
+  const [dateRange, setDateRange] = useState("last_30_days");
+  const [region, setRegion] = useState("all");
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDateRange = e.target.value;
+    setDateRange(newDateRange);
+    dispatch(fetchKpis({ dateRange: newDateRange, region }));
+  };
+
+  const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newRegion = e.target.value;
+    setRegion(newRegion);
+    dispatch(fetchKpis({ dateRange, region: newRegion }));
   };
 
   return (
     <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-      {/* Date Range Selector */}
-      <label>
-        Date Range:
-        <select
-          value={filters.dateRange}
-          onChange={(e) => handleChange("dateRange", e.target.value)}
-        >
+      <div>
+        <label>Date Range: </label>
+        <select value={dateRange} onChange={handleDateChange}>
           <option value="last_7_days">Last 7 Days</option>
           <option value="last_30_days">Last 30 Days</option>
           <option value="last_90_days">Last 90 Days</option>
-          <option value="year_to_date">Year to Date</option>
         </select>
-      </label>
+      </div>
 
-      {/* Region Selector */}
-      <label>
-        Region:
-        <select
-          value={filters.region}
-          onChange={(e) => handleChange("region", e.target.value)}
-        >
+      <div>
+        <label>Region: </label>
+        <select value={region} onChange={handleRegionChange}>
           <option value="all">All</option>
-          <option value="NA">North America</option>
-          <option value="EU">Europe</option>
-          <option value="APAC">Asia-Pacific</option>
+          <option value="NA">NA</option>
+          <option value="EU">EU</option>
+          <option value="APAC">APAC</option>
         </select>
-      </label>
+      </div>
     </div>
   );
 };

@@ -16,6 +16,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    
 
     from .auth.routes import auth_bp
     from .api.routes import api_bp

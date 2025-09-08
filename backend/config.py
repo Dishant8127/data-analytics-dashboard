@@ -1,14 +1,6 @@
-#config.py
-
-
-
-
-
-
-
-
 # config.py
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -19,10 +11,19 @@ class Config:
     FLASK_ENV = os.getenv("FLASK_ENV", "development")
     SECRET_KEY = os.getenv("SECRET_KEY", "default-secret")
 
-    # Database settings (hidden via .env)
+    # Database settings
     SQLALCHEMY_DATABASE_URI = os.getenv("POSTGRES_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT settings
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "default-jwt-secret")
-    JWT_ACCESS_TOKEN_EXPIRES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600))
+
+    # Access tokens → short-lived (default: 15 minutes for production, 30s for testing)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(
+        seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_SEC", 1800))  # 1800s = 30 min
+    )
+
+    # Refresh tokens → long-lived (default: 7 days)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(
+        days=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES_DAYS", 7))
+    )

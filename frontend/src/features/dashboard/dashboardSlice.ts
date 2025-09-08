@@ -1,54 +1,42 @@
-// dashboardSlice.ts
+// src/features/dashboard/dashboardSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "../../services/api";
 
-
-interface KPIData {
+export type KPI = {
   region: string;
   total_sales: number;
-}
+};
 
-interface DashboardState {
-  kpis: KPIData[];
+type DashboardState = {
+  kpis: KPI[];
   loading: boolean;
   error: string | null;
-  filters: {
-    dateRange: string;
-    region: string;
-  };
-}
+};
 
 const initialState: DashboardState = {
   kpis: [],
   loading: false,
   error: null,
-  filters: {
-    dateRange: "last_30_days",
-    region: "all",
-  },
 };
 
-// ✅ Async action to fetch KPI data with current filters
-export const fetchKpis = createAsyncThunk<
-  KPIData[],
-  void,
-  { rejectValue: string; state: { dashboard: DashboardState } }
->(
+// ✅ Async thunk to fetch KPIs with optional filters
+export const fetchKpis = createAsyncThunk(
   "dashboard/fetchKpis",
-  async (_, thunkAPI) => {
+  async (
+    filters: { dateRange?: string; region?: string } = {},
+    { rejectWithValue }
+  ) => {
     try {
-      const state = thunkAPI.getState();
-      const { dateRange, region } = state.dashboard.filters;
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append("dateRange", filters.dateRange);
+      if (filters.region) params.append("region", filters.region);
 
-      const res = await api.get("/api/kpi-summary", {
-        params: { dateRange, region },
-      });
-
-      return res.data;
+      const res = await api.get(`/api/kpi-summary?${params.toString()}`);
+      return res.data as KPI[];
     } catch (err: any) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.msg || "Failed to fetch KPIs"
+      console.error("KPI fetch failed:", err);
+      return rejectWithValue(
+        err.response?.data?.message || "Network Error"
       );
     }
   }
@@ -57,27 +45,22 @@ export const fetchKpis = createAsyncThunk<
 const dashboardSlice = createSlice({
   name: "dashboard",
   initialState,
-  reducers: {
-    setFilters: (state, action: PayloadAction<{ dateRange: string; region: string }>) => {
-      state.filters = action.payload;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchKpis.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchKpis.fulfilled, (state, action: PayloadAction<KPIData[]>) => {
+      .addCase(fetchKpis.fulfilled, (state, action) => {
         state.loading = false;
         state.kpis = action.payload;
       })
       .addCase(fetchKpis.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Unknown error";
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { setFilters } = dashboardSlice.actions;
 export default dashboardSlice.reducer;
