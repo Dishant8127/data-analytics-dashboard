@@ -1,6 +1,5 @@
 # app/api/routes.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 
 api_bp = Blueprint("api", __name__)
 
@@ -12,7 +11,6 @@ MOCK_KPIS = [
 ]
 
 @api_bp.route("/kpi-summary", methods=["GET"])
-# @jwt_required()
 def get_kpi_summary():
     # Get filters from query parameters
     date_range = request.args.get("dateRange", "last_30_days")

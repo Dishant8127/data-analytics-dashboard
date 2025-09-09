@@ -1,23 +1,22 @@
 // src/features/dashboard/DashboardPage.tsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import type { RootState, AppDispatch } from "../../app/store";
+import type { RootState, AppDispatch } from "../../app/store";  // ✅ type-only import
 import { fetchKpis } from "./dashboardSlice";
-import { logout } from "../user-auth/authSlice";
-
 import FilterBar from "./components/FilterBar";
 import KPIWidget from "./components/KPIWidget";
 import ChartWidget from "./components/ChartWidget";
+import { useNavigate } from "react-router-dom";
+import { logout } from "../user-auth/authSlice";
 
 const DashboardPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
   const { kpis, loading, error } = useSelector((state: RootState) => state.dashboard);
 
-  // Fetch default KPIs on load
   useEffect(() => {
-    dispatch(fetchKpis({ dateRange: "last_30_days", region: "all" }));
+    dispatch(fetchKpis());
   }, [dispatch]);
 
   const handleLogout = () => {
@@ -26,59 +25,39 @@ const DashboardPage = () => {
   };
 
   return (
-    <div style={{ padding: "2rem", minHeight: "100vh", backgroundColor: "var(--background-color)", color: "var(--color)" }}>
-      
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+    <div style={{ padding: "1rem" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <h2>Dashboard</h2>
         <button
           onClick={handleLogout}
           style={{
             padding: "0.5rem 1rem",
-            borderRadius: "8px",
+            backgroundColor: "#f44336",
+            color: "white",
             border: "none",
-            backgroundColor: "#646cff",
-            color: "#fff",
+            borderRadius: "4px",
             cursor: "pointer",
-            fontWeight: "bold",
-            transition: "background 0.2s",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#535bf2")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#646cff")}
         >
           Logout
         </button>
-      </div>
+      </header>
 
-      {/* Filters */}
       <FilterBar />
 
-      {/* KPI Loading/Error */}
       {loading && <p>Loading KPIs...</p>}
-      {error && (
-        <div
-          style={{
-            backgroundColor: "#ffe6e6",
-            color: "#cc0000",
-            padding: "1rem",
-            borderRadius: "8px",
-            border: "1px solid #ff6b6b",
-            marginTop: "1rem",
-            fontWeight: "bold",
-          }}
-        >
-          ⚠️ {error}
-        </div>
-      )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* KPI Widgets */}
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "1rem" }}>
-        {kpis.map((kpi, idx) => (
-          <KPIWidget key={idx} title={`Sales (${kpi.region})`} value={`$${kpi.total_sales.toLocaleString()}`} />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
+        {kpis.map((kpi) => (
+          <KPIWidget
+            key={kpi.region}  // ✅ use region if id doesn’t exist
+            title={`Sales (${kpi.region})`}
+            value={`$${kpi.total_sales.toLocaleString()}`}
+          />
         ))}
       </div>
 
-      {/* Chart */}
       <div style={{ marginTop: "2rem" }}>
         <ChartWidget />
       </div>
@@ -87,3 +66,7 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+
+
+

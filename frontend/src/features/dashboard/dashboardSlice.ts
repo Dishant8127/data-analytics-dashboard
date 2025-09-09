@@ -1,42 +1,54 @@
 // src/features/dashboard/dashboardSlice.ts
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "../../services/api";
 
-export type KPI = {
+interface KPIData {
   region: string;
   total_sales: number;
-};
+}
 
-type DashboardState = {
-  kpis: KPI[];
+interface DashboardState {
+  kpis: KPIData[];
   loading: boolean;
   error: string | null;
-};
+  filters: {
+    dateRange: string;
+    region: string;
+  };
+}
 
 const initialState: DashboardState = {
   kpis: [],
   loading: false,
   error: null,
+  filters: {
+    dateRange: "last_30_days",
+    region: "all",
+  },
 };
 
-// ✅ Async thunk to fetch KPIs with optional filters
-export const fetchKpis = createAsyncThunk(
+// ✅ Async action: fetch KPI summary with filters
+export const fetchKpis = createAsyncThunk<
+  KPIData[], // return type
+  void,      // no arg
+  { rejectValue: string } // reject type
+>(
   "dashboard/fetchKpis",
-  async (
-    filters: { dateRange?: string; region?: string } = {},
-    { rejectWithValue }
-  ) => {
+  async (_, thunkAPI) => {
     try {
-      const params = new URLSearchParams();
-      if (filters.dateRange) params.append("dateRange", filters.dateRange);
-      if (filters.region) params.append("region", filters.region);
+      const state: any = thunkAPI.getState();
+      const { dateRange, region } = state.dashboard.filters;
 
-      const res = await api.get(`/api/kpi-summary?${params.toString()}`);
-      return res.data as KPI[];
+      const res = await api.get("/api/kpi-summary", {
+        params: { dateRange, region },
+      });
+
+      return res.data;
     } catch (err: any) {
-      console.error("KPI fetch failed:", err);
-      return rejectWithValue(
-        err.response?.data?.message || "Network Error"
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.msg || "Failed to fetch KPIs"
       );
     }
   }
@@ -45,14 +57,24 @@ export const fetchKpis = createAsyncThunk(
 const dashboardSlice = createSlice({
   name: "dashboard",
   initialState,
-  reducers: {},
+  reducers: {
+    setFilters: (
+      state,
+      action: PayloadAction<{ dateRange: string; region: string }>
+    ) => {
+      state.filters = action.payload;
+    },
+    clearError: (state) => {
+      state.error = null; // ✅ reset error manually
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchKpis.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.error = null; // ✅ clear previous error before new request
       })
-      .addCase(fetchKpis.fulfilled, (state, action) => {
+      .addCase(fetchKpis.fulfilled, (state, action: PayloadAction<KPIData[]>) => {
         state.loading = false;
         state.kpis = action.payload;
       })
@@ -63,4 +85,5 @@ const dashboardSlice = createSlice({
   },
 });
 
+export const { setFilters, clearError } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

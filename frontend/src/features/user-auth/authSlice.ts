@@ -1,7 +1,7 @@
 // authSlice.ts
+
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-
 
 interface AuthState {
   token: string | null;
@@ -10,10 +10,11 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  token: localStorage.getItem("token"), // ✅ Persist token if already stored
+  token: localStorage.getItem("token"),
   refreshToken: localStorage.getItem("refreshToken"),
   role: localStorage.getItem("role"),
 };
+
 
 const authSlice = createSlice({
   name: "auth",
