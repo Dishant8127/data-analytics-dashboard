@@ -15,11 +15,11 @@ const LoginPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // clear old error before new attempt
+    setError(null); // Clear previous error
+
     try {
       const res = await api.post("/auth/login", { username, password });
 
-      // ✅ Only run if login succeeded
       if (res.data?.access_token) {
         dispatch(
           setCredentials({
@@ -28,12 +28,19 @@ const LoginPage = () => {
             role: res.data.role,
           })
         );
-        navigate("/dashboard");
+
+        // ✅ Role-based navigation
+        if (res.data.role === "manager") {
+          navigate("/manager-dashboard");
+        } else if (res.data.role === "analyst") {
+          navigate("/analyst-dashboard");
+        } else {
+          navigate("/unauthorized");
+        }
       } else {
         setError("Unexpected response from server.");
       }
     } catch (err: any) {
-      // ✅ Show error only once
       if (!error) {
         setError(err.response?.data?.msg || "Login failed. Check username/password.");
       }
@@ -41,9 +48,20 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "2rem auto", padding: "1.5rem", border: "1px solid #ddd", borderRadius: "8px" }}>
+    <div
+      style={{
+        maxWidth: "400px",
+        margin: "2rem auto",
+        padding: "1.5rem",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+      }}
+    >
       <h2>Login</h2>
-      <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <form
+        onSubmit={handleLogin}
+        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      >
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -65,4 +83,5 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
 

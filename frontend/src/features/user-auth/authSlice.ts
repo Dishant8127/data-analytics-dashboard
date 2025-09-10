@@ -20,14 +20,20 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ token: string; refreshToken: string; role: string }>) => {
-      state.token = action.payload.token;
-      state.refreshToken = action.payload.refreshToken;
-      state.role = action.payload.role;
-      localStorage.setItem("token", action.payload.token);
-      localStorage.setItem("refreshToken", action.payload.refreshToken);
-      localStorage.setItem("role", action.payload.role);
-    },
+setCredentials: (
+  state,
+  action: PayloadAction<{ token: string; refreshToken: string; role: string }>
+) => {
+  state.token = action.payload.token;
+  state.refreshToken = action.payload.refreshToken;
+  state.role = action.payload.role;
+
+  // ✅ Persist to localStorage
+  localStorage.setItem("token", action.payload.token);
+  localStorage.setItem("refreshToken", action.payload.refreshToken);
+  localStorage.setItem("role", action.payload.role);
+},
+
     logout: (state) => {
       state.token = null;
       state.refreshToken = null;

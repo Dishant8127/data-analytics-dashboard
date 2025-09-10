@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "../features/user-auth/LoginPage";
-import DashboardPage from "../features/dashboard/DashboardPage";
+import ManagerDashboard from "../features/dashboard/ManagerDashboard";
+import AnalystDashboard from "../features/dashboard/AnalystDashboard";
 import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
@@ -10,18 +11,31 @@ function App() {
         {/* Public route */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected route */}
+        {/* Manager-only route */}
         <Route
-          path="/dashboard"
+          path="/manager-dashboard"
           element={
-            <ProtectedRoute>
-              <DashboardPage />
+            <ProtectedRoute allowedRoles={["manager"]}>
+              <ManagerDashboard />
             </ProtectedRoute>
           }
         />
 
-        {/* Default redirect to dashboard */}
-        <Route path="*" element={<DashboardPage />} />
+        {/* Analyst-only route */}
+        <Route
+          path="/analyst-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["analyst"]}>
+              <AnalystDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Unauthorized page */}
+        <Route path="/unauthorized" element={<h2>🚫 Unauthorized Access</h2>} />
+
+        {/* Default fallback */}
+        <Route path="*" element={<LoginPage />} />
       </Routes>
     </Router>
   );

@@ -7,8 +7,12 @@ from flask_bcrypt import Bcrypt
 from config import Config
 from flask_cors import CORS  # ✅ Import CORS
 from sqlalchemy import text
-
+# from flask_caching import Cache
 from app import db, jwt, bcrypt
+
+# db = SQLAlchemy()
+# jwt = JWTManager()
+# cache = Cache(config={"CACHE_TYPE": "RedisCache", "CACHE_REDIS_URL": Config.REDIS_URL})
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +24,7 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
+    # cache.init_app(app)
 
     from app.api.routes import api_bp
     from app.auth.routes import auth_bp

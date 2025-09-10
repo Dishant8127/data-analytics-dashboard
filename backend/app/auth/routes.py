@@ -30,4 +30,11 @@ def login():
 def refresh():
     identity = get_jwt_identity()
     new_access_token = create_access_token(identity=identity)
-    return jsonify(access_token=new_access_token)
+    new_refresh_token = create_refresh_token(identity=identity)
+
+    return jsonify(access_token=new_access_token,
+                   refresh_token=new_refresh_token,
+                   role=User.role
+                   )
+    
+

@@ -4,9 +4,9 @@ from app.models import User
 app = create_app()
 
 with app.app_context():
-    username = "sahil"
-    password = "sahil"
-    role = "analyst"
+    username = "Dishant"
+    password = "dishant"
+    role = "employ"
 
     existing_user = User.query.filter_by(username=username).first()
     if existing_user:

@@ -1,22 +1,30 @@
 // ProtectedRoutx.tsx
 
+
+
 import { useSelector } from "react-redux";
-import type { RootState } from "./store";   // ✅ use type-only import
+import type { RootState } from "./store";
 import { Navigate } from "react-router-dom";
-import type React from "react";
 
 interface Props {
-  children: React.ReactNode;                    // ✅ JSX.Element recognized when react types installed
+  children: React.ReactNode;
+  allowedRoles?: string[]; // ✅ optional role restriction
 }
 
-const ProtectedRoute = ({ children }: Props) => {
-  const { token } = useSelector((state: RootState) => state.auth);
+const ProtectedRoute = ({ children, allowedRoles }: Props) => {
+  const { token, role } = useSelector((state: RootState) => state.auth);
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  // ✅ If route requires specific roles → check
+  if (allowedRoles && !allowedRoles.includes(role || "")) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;
 };
 
 export default ProtectedRoute;
+

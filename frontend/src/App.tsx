@@ -1,70 +1,86 @@
-// App.tsx
+// // App.tsx
 
 
 
-
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from "../src/features/user-auth/LoginPage";
-import DashboardPage from "../src/features/dashboard/DashboardPage";
-import ProtectedRoute from "../src/app/ProtectedRoute";
-
-function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* Public route */}
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* Protected route */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Default redirect to dashboard */}
-        <Route path="*" element={<DashboardPage />} />
-      </Routes>
-    </Router>
-  );
-}
-
-export default App;
+// import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+// import LoginPage from "../src/features/user-auth/LoginPage";
+// // import DashboardPage from "../src/features/dashboard/DashboardPage";
+// import ProtectedRoute from "../src/app/ProtectedRoute";
+// import ManagerDashboard from "./features/dashboard/ManagerDashboard";
+// import AnalystDashboard from "./features/dashboard/AnalystDashboard";
 
 
-
-
-
-
-
-
-// import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-// import { useSelector } from "react-redux";
-// import type { RootState } from "./app/store";
-// import LoginPage from "./features/user-auth/LoginPage";
-// import DashboardPage from "./features/dashboard/DashboardPage";
 
 // function App() {
-//   const token = useSelector((state: RootState) => state.auth.token);
-
 //   return (
 //     <Router>
 //       <Routes>
+//         {/* Public route */}
+//         <Route path="/login" element={<LoginPage />} />
+
+//         {/* Manager-only route */}
 //         <Route
-//           path="/login"
-//           element={token ? <Navigate to="/dashboard" /> : <LoginPage />}
+//           path="/manager-dashboard"
+//           element={
+//             <ProtectedRoute allowedRoles={["manager"]}>
+//               <ManagerDashboard />
+//             </ProtectedRoute>
+//           }
 //         />
+
+//         {/* Analyst-only route */}
 //         <Route
-//           path="/dashboard"
-//           element={token ? <DashboardPage /> : <Navigate to="/login" />}
+//           path="/analyst-dashboard"
+//           element={
+//             <ProtectedRoute allowedRoles={["analyst"]}>
+//               <AnalystDashboard />
+//             </ProtectedRoute>
+//           }
 //         />
-//         <Route path="*" element={<Navigate to="/login" />} />
+
+//         {/* Unauthorized page */}
+//         <Route path="/unauthorized" element={<h2>🚫 Unauthorized Access</h2>} />
+
+
+
+//         {/* Default fallback */}
+//         <Route path="*" element={<LoginPage />} />
 //       </Routes>
 //     </Router>
 //   );
 // }
 
 // export default App;
+
+
+
+// // import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+// // import LoginPage from "../src/features/user-auth/LoginPage";
+// // import DashboardPage from "../src/features/dashboard/DashboardPage";
+// // import ProtectedRoute from "../src/app/ProtectedRoute";
+
+// // function App() {
+// //   return (
+// //     <Router>
+// //       <Routes>
+// //         {/* Public route */}
+// //         <Route path="/login" element={<LoginPage />} />
+
+// //         {/* Protected route */}
+// //         <Route
+// //           path="/dashboard"
+// //           element={
+// //             <ProtectedRoute>
+// //               <DashboardPage />
+// //             </ProtectedRoute>
+// //           }
+// //         />
+
+// //         {/* Default redirect to dashboard */}
+// //         <Route path="*" element={<DashboardPage />} />
+// //       </Routes>
+// //     </Router>
+// //   );
+// // }
+
+// // export default App;
