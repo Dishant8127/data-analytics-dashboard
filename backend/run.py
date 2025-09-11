@@ -7,8 +7,10 @@ from flask_bcrypt import Bcrypt
 from config import Config
 from flask_cors import CORS  # ✅ Import CORS
 from sqlalchemy import text
-# from flask_caching import Cache
-from app import db, jwt, bcrypt
+from flask_caching import Cache
+from app import db, jwt, bcrypt, create_app
+# from app import create_app
+
 
 # db = SQLAlchemy()
 # jwt = JWTManager()
