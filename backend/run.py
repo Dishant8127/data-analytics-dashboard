@@ -11,11 +11,6 @@ from flask_caching import Cache
 from app import db, jwt, bcrypt, create_app
 # from app import create_app
 
-
-# db = SQLAlchemy()
-# jwt = JWTManager()
-# cache = Cache(config={"CACHE_TYPE": "RedisCache", "CACHE_REDIS_URL": Config.REDIS_URL})
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -26,12 +21,17 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    # cache.init_app(app)
 
     from app.api.routes import api_bp
     from app.auth.routes import auth_bp
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/auth")
+
+
+    @app.route("/")
+    def index():
+        return {"status": "Backend running", "message": "Use /api/... endpoints"}
+
 
     @app.route("/health")
     def health():

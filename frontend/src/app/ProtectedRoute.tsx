@@ -1,5 +1,4 @@
-// ProtectedRoutx.tsx
-
+// src/ProtectedRoute.tsx
 
 
 import { useSelector } from "react-redux";
@@ -8,7 +7,7 @@ import { Navigate } from "react-router-dom";
 
 interface Props {
   children: React.ReactNode;
-  allowedRoles?: string[]; // ✅ optional role restriction
+  allowedRoles?: string[]; //  optional role restriction
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: Props) => {
@@ -18,7 +17,7 @@ const ProtectedRoute = ({ children, allowedRoles }: Props) => {
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ If route requires specific roles → check
+  //  If route requires specific roles → check
   if (allowedRoles && !allowedRoles.includes(role || "")) {
     return <Navigate to="/unauthorized" replace />;
   }

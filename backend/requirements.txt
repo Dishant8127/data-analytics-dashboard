@@ -1,5 +1,30 @@
-Flask
-Flask-Mail
+# Core Flask
+flask
+flask-sqlalchemy
+flask-jwt-extended
+flask-bcrypt
+flask-mail
+flask-cors
+flask-caching
+flask-migrate 
+
+# Environment config
 python-dotenv
+
+# Database & analytics
+clickhouse-connect
+clickhouse-driver
+
+# Background tasks
+celery[redis]
+redis
+
+# Reporting & visualization
 reportlab
 matplotlib
+
+# Extra utilities
+pandas
+requests
+numpy
+psycopg2-binary
