@@ -1,6 +1,5 @@
 
 import { useEffect } from "react";
-// import { useDispatch } from "react-redux";
 import { useAppDispatch } from "../../app/hooks";
 import { fetchKpis } from "./dashboardSlice";
 import KPIWidget from "./components/KPIWidget";

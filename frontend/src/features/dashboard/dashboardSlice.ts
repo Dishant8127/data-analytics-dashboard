@@ -29,7 +29,7 @@ const initialState: DashboardState = {
   },
 };
 
-// ✅ Async action: fetch KPI summary with filters
+//  Async action: fetch KPI summary with filters
 export const fetchKpis = createAsyncThunk<
   KPIData[], // return type
   void,      // no arg
@@ -65,14 +65,14 @@ const dashboardSlice = createSlice({
       state.filters = action.payload;
     },
     clearError: (state) => {
-      state.error = null; // ✅ reset error manually
+      state.error = null; //  reset error manually
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchKpis.pending, (state) => {
         state.loading = true;
-        state.error = null; // ✅ clear previous error before new request
+        state.error = null; //  clear previous error before new request
       })
       .addCase(fetchKpis.fulfilled, (state, action: PayloadAction<KPIData[]>) => {
         state.loading = false;

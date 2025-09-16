@@ -1,8 +1,6 @@
-
 // frontend/src/features/dashboard/AnalystDashboard.tsx
+
 import { useEffect } from "react";
-// import { useSelector } from "react-redux";
-// import type  { RootState } from "../../app/store";
 import { useAppDispatch, useAppSelector } from "../../app/hooks"; // typed dispatch
 import { fetchKpis } from "./dashboardSlice";
 import FilterBar from "./components/FilterBar";
@@ -16,7 +14,7 @@ const AnalystDashboard = () => {
   const { kpis, loading, error, filters } = useAppSelector((state) => state.dashboard);
 
 
-  // ✅ Fetch KPIs on mount
+  //  Fetch KPIs on mount
   useEffect(() => {
     dispatch(fetchKpis());
   }, [dispatch]);

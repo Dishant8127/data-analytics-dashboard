@@ -24,7 +24,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // ✅ Skip refresh logic for login/refresh endpoints
+    //  Skip refresh logic for login/refresh endpoints
     if (originalRequest.url.includes("/auth/login") || originalRequest.url.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
@@ -42,7 +42,7 @@ api.interceptors.response.use(
           const newAccessToken = refreshRes.data.access_token;
           localStorage.setItem("token", newAccessToken);
 
-          // ✅ Update original request with new token
+          //  Update original request with new token
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api.request(originalRequest);
         } catch (refreshError) {
@@ -58,3 +58,5 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+

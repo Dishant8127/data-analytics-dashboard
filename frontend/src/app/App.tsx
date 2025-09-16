@@ -1,3 +1,5 @@
+// App.tsx
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "../features/user-auth/LoginPage";
 import ManagerDashboard from "../features/dashboard/ManagerDashboard";

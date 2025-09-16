@@ -28,7 +28,7 @@ setCredentials: (
   state.refreshToken = action.payload.refreshToken;
   state.role = action.payload.role;
 
-  // ✅ Persist to localStorage
+  //  Persist to localStorage
   localStorage.setItem("token", action.payload.token);
   localStorage.setItem("refreshToken", action.payload.refreshToken);
   localStorage.setItem("role", action.payload.role);
@@ -47,3 +47,4 @@ setCredentials: (
 
 export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;
+

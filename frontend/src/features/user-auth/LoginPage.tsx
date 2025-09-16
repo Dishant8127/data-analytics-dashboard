@@ -29,7 +29,7 @@ const LoginPage = () => {
           })
         );
 
-        // ✅ Role-based navigation
+        //  Role-based navigation
         if (res.data.role === "manager") {
           navigate("/manager-dashboard");
         } else if (res.data.role === "analyst") {
@@ -76,12 +76,11 @@ const LoginPage = () => {
         <button type="submit">Login</button>
       </form>
 
-      {/* ✅ Error shows once */}
+      {/*  Error shows once */}
       {error && <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>}
     </div>
   );
 };
 
 export default LoginPage;
-
 

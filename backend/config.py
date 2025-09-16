@@ -1,5 +1,5 @@
-
 # config.py
+
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -51,3 +51,11 @@ class Config:
     # Celery
     CELERY_BROKER_URL = REDIS_URL
     CELERY_RESULT_BACKEND = REDIS_URL
+
+
+        # ClickHouse
+    CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "localhost")
+    CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", 8123))
+    CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "default")
+    CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "")
+    CLICKHOUSE_DATABASE = os.getenv("CLICKHOUSE_DATABASE", "analytics")

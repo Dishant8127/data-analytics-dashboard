@@ -1,7 +1,8 @@
 // src/features/dashboard/DashboardPage.tsx
+
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "../../app/store";  // ✅ type-only import
+import type { RootState, AppDispatch } from "../../app/store";  //  type-only import
 import { fetchKpis } from "./dashboardSlice";
 import FilterBar from "./components/FilterBar";
 import KPIWidget from "./components/KPIWidget";
@@ -51,7 +52,7 @@ const DashboardPage = () => {
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
         {kpis.map((kpi) => (
           <KPIWidget
-            key={kpi.region}  // ✅ use region if id doesn’t exist
+            key={kpi.region}  //  use region if id doesn’t exist
             title={`Sales (${kpi.region})`}
             value={`$${kpi.total_sales.toLocaleString()}`}
           />
@@ -66,7 +67,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-
-
-
-
