@@ -3,16 +3,14 @@
 
 set -e
 
-host="$1"
-shift
-cmd="$@"
+host="clickhouse"
+port="9000"
 
-echo "⏳ Waiting for ClickHouse at $host:9000..."
+echo "Waiting for ClickHouse at ${host}:${port}..."
 
-until nc -z "$host" 9000; do
-  >&2 echo "ClickHouse is unavailable - sleeping"
-  sleep 2
+while ! nc -z $host $port; do
+  sleep 1
 done
 
->&2 echo "✅ ClickHouse is up - executing command"
-exec $cmd
+echo "ClickHouse is up!"
+exec "$@"

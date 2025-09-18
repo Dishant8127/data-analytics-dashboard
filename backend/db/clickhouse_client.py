@@ -2,16 +2,16 @@ import clickhouse_connect
 from config import Config
 
 client = clickhouse_connect.get_client(
-    host="clickhouse",
-    port=8123,        # ✅ use HTTP port
-    username="default",
-    password="mypassword",
-    database="analytics"
-    # host=Config.CLICKHOUSE_HOST,
-    # port=Config.CLICKHOUSE_PORT,
-    # username=Config.CLICKHOUSE_USER,
-    # password=Config.CLICKHOUSE_PASSWORD,
-    # database=Config.CLICKHOUSE_DATABASE
+    # host="clickhouse",
+    # port=8123,        # ✅ use HTTP port
+    # username="default",
+    # password="mypassword",
+    # database="analytics"
+    host=Config.CLICKHOUSE_HOST,
+    port=Config.CLICKHOUSE_PORT,
+    username=Config.CLICKHOUSE_USER,
+    password=Config.CLICKHOUSE_PASSWORD,
+    database=Config.CLICKHOUSE_DATABASE
 )
 
 def fetch_region_kpis(region: str, date_range: str = "last_7_days"):

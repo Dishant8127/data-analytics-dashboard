@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 COPY . .
-RUN chmod +x wait-for-clickhouse.sh
+COPY wait-for-clickhouse.sh /app/wait-for-clickhouse.sh
+RUN chmod +x /app/wait-for-clickhouse.sh
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["/app/wait-for-clickhouse.sh", "gunicorn", "-b", "0.0.0.0:5000", "run:app"]
