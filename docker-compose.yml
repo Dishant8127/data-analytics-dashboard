@@ -22,6 +22,22 @@ services:
       - ./backend/.env
     restart: always
 
+  celery-worker:
+    build: ./backend
+    command: sh -c "./wait-for-clickhouse.sh clickhouse 9000 && celery -A celery_worker.celery worker --loglevel=INFO --pool=solo"
+    
+    depends_on:
+      - redis
+      - clickhouse
+      - postgres
+    environment:
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=
+      - CLICKHOUSE_DATABASE=analytics
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
   redis:
     image: redis/redis-stack-server:latest
     container_name: redis
@@ -58,71 +74,3 @@ services:
 volumes:
   clickhouse_data:
   postgres_data:
-
-
-
-
-# version: "3.9"
-
-# services:
-#   backend:
-#     build:
-#       context: ./backend   # 👈 kept from Code 1
-#       dockerfile: Dockerfile
-#     container_name: dashboard-backend
-#     # command: ["/app/wait-for-clickhouse.sh", "clickhouse", "flask", "run", "--host=0.0.0.0", "--port=5000"]
-#     command: ["/bin/bash", "-c", "/app/wait-for-clickhouse.sh && python run.py"]
-# # 
-#     depends_on:
-#       - clickhouse
-#       - redis
-#       - postgres
-#     environment:
-#       - FLASK_ENV=development
-#       - FLASK_APP=app:create_app
-#       - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://dashboard:dashboard@postgres:5432/   # 👈 merged from Code 2
-#     volumes:dashboard_db
-#       - ./backend:/app
-#     ports:
-#       - "5000:5000"
-#     env_file:
-#       - ./backend/.env
-#     restart: always
-
-#   redis:
-#     image: redis/redis-stack-server:latest
-#     container_name: redis
-#     ports:
-#       - "6379:6379"
-
-#   clickhouse:
-#     image: clickhouse/clickhouse-server:latest
-#     container_name: clickhouse
-#     ports:
-#       - "8123:8123"   # HTTP interface
-#       - "9000:9000"   # Native TCP interface
-#     environment:
-#       CLICKHOUSE_DB: analytics
-#       CLICKHOUSE_USER: default
-#       CLICKHOUSE_PASSWORD: mypassword
-#     volumes:
-#       - clickhouse_data:/var/lib/clickhouse
-
-#   postgres:
-#     image: postgres:15
-#     container_name: postgres
-#     environment:
-#       POSTGRES_USER: dashboard
-#       POSTGRES_PASSWORD: dashboard
-#       POSTGRES_DB: dashboard_db
-#     ports:
-#       - "5432:5432"
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-#     networks:
-#       - default
-
-# volumes:
-#   clickhouse_data:
-#   postgres_data:
-

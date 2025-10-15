@@ -1,4 +1,4 @@
-
+// src\features\dashboard\ManagerDashboard.tsx
 import { useEffect } from "react";
 import { useAppDispatch } from "../../app/hooks";
 import { fetchKpis } from "./dashboardSlice";
@@ -16,7 +16,7 @@ const ManagerDashboard = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await api.get("/api/generate-pdf", { responseType: "blob" });
+      const response = await api.get("/api/generate-pdf", { responseType: "blob" })
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement("a");
       a.href = url;

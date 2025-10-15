@@ -1,21 +1,20 @@
+
 // frontend/src/features/dashboard/AnalystDashboard.tsx
 
 import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "../../app/hooks"; // typed dispatch
+import { useAppDispatch, useAppSelector } from "../../app/hooks"; // typed dispatch + selector
 import { fetchKpis } from "./dashboardSlice";
 import FilterBar from "./components/FilterBar";
 import KPIWidget from "./components/KPIWidget";
 import ChartWidget from "./components/ChartWidget";
 import api from "../../services/api";
 
-
 const AnalystDashboard = () => {
   const dispatch = useAppDispatch();
   const { kpis, loading, error, filters } = useAppSelector((state) => state.dashboard);
 
-
   //  Fetch KPIs on mount
-  useEffect(() => {
+  useEffect(() => { 
     dispatch(fetchKpis());
   }, [dispatch]);
 
@@ -37,6 +36,27 @@ const AnalystDashboard = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       alert("CSV export failed");
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const { dateRange, region } = filters;
+      const response = await api.get("/api/export-pdf", {
+        params: { dateRange, region },
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "filtered_report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("PDF export failed");
     }
   };
 
@@ -65,9 +85,10 @@ const AnalystDashboard = () => {
       {/* Chart */}
       <ChartWidget />
 
-      {/* CSV Export */}
-      <div style={{ marginTop: "2rem" }}>
+      {/* Export Buttons */}
+      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
         <button onClick={handleExportCSV}>📥 Export CSV</button>
+        <button onClick={handleExportPDF}>📑 Export PDF</button>
       </div>
     </div>
   );

@@ -17,8 +17,13 @@ class Config:
     # -----------------------------
     # Database settings
     # -----------------------------
-    # SQLALCHEMY_DATABASE_URI = os.getenv("POSTGRES_DATABASE_URI")
-    SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+    SQLALCHEMY_DATABASE_URI = (
+        f"postgresql+psycopg2://{os.getenv('POSTGRES_USER', 'postgres')}:"
+        f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
+        f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
+        f"{os.getenv('POSTGRES_PORT', '5432')}/"
+        f"{os.getenv('POSTGRES_DB', 'analytics')}"
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # -----------------------------
@@ -53,8 +58,9 @@ class Config:
     CELERY_BROKER_URL = REDIS_URL
     CELERY_RESULT_BACKEND = REDIS_URL
 
-
-        # ClickHouse
+    # -----------------------------
+    # ClickHouse
+    # -----------------------------
     CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "localhost")
     CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", 8123))
     CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "default")

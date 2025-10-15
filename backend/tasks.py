@@ -1,181 +1,168 @@
-# backend/tasks.py
-
-from celery_worker import celery
-from flask_mail import Message
 import io
+from celery import Celery
+from reportlab.platypus import SimpleDocTemplate, Spacer, Image, Paragraph, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-import matplotlib.pyplot as plt
-from app import create_app, db, mail
-from app.models import User
-from db.clickhouse_client import fetch_region_kpis   # ✅ New import
+from reportlab.lib.units import inch
 
-# Create Flask app for Celery
-flask_app = create_app()
+from utils.pdf_utils import (
+    build_kpi_table,
+    build_product_table,
+    build_product_chart,
+    build_trend_table,
+)
+from db.clickhouse_client import (
+    fetch_region_kpis,
+    fetch_region_product_kpis,
+    fetch_region_kpi_trends,
+)
+from utils.kpi_utils import calc_trend
 
 
-def generate_combined_pdf(manager):
-    """Generate a PDF with global + region-specific KPI data"""
+# ======================================================
+# Celery configuration
+# ======================================================
+celery = Celery("tasks", broker="redis://redis:6379/0")
 
-    # === GLOBAL DATA ===
-    global_data = fetch_region_kpis(region="ALL", date_range="last_7_days")
-    if not global_data:
-        global_data = [
-            {"region": "NA", "total_sales": 0},
-            {"region": "EU", "total_sales": 0},
-            {"region": "APAC", "total_sales": 0},
+
+# ======================================================
+# Helper: generate Region PDF for Managers
+# ======================================================
+def generate_region_pdf(manager):
+    """
+    Generate a Manager PDF report containing:
+    - Executive summary with trend comparison (vs previous week)
+    - KPI tables and charts
+    - Product category breakdown
+    """
+
+    #  Fetch KPI trends (current vs previous week)
+    current, previous = fetch_region_kpi_trends(manager.region, period_days=7)
+    if not current:
+        current = {"total_sales": 0, "new_customers": 0, "churn_rate": 0}
+    if not previous:
+        previous = {"total_sales": 0, "new_customers": 0, "churn_rate": 0}
+
+    #  Fetch region summary and top product categories
+    region_data = fetch_region_kpis(manager.region, date_range="last_7_days")
+    if not region_data:
+        region_data = [
+            {
+                "region": manager.region,
+                "total_sales": 0,
+                "new_customers": 0,
+                "churn_rate": 0,
+            }
         ]
 
-    # === GLOBAL CHART ===
-    fig1, ax1 = plt.subplots(figsize=(4, 3))
-    regions = [k["region"] for k in global_data]
-    sales = [k["total_sales"] for k in global_data]
-    ax1.bar(regions, sales, color="lightgreen")
-    ax1.set_title("Global Sales by Region")
-    plt.tight_layout()
+    product_data = fetch_region_product_kpis(manager.region, date_range="last_7_days")
+    if not product_data:
+        product_data = [
+            {
+                "product_category": "N/A",
+                "total_sales": 0,
+                "new_customers": 0,
+                "churn_rate": 0,
+            }
+        ]
 
-    global_chart_buf = io.BytesIO()
-    plt.savefig(global_chart_buf, format="png")
-    plt.close(fig1)
-    global_chart_buf.seek(0)
-    global_chart_img = ImageReader(global_chart_buf)
-
-    # === REGION-SPECIFIC DATA ===
-    manager_region = getattr(manager, "region", "NA")
-    region_data = fetch_region_kpis(manager_region, date_range="last_7_days")
-
-    if not region_data:
-        region_data = [{"region": manager_region, "total_sales": 0}]
-
-    fig2, ax2 = plt.subplots(figsize=(4, 3))
-    ax2.bar([k["region"] for k in region_data], [k["total_sales"] for k in region_data], color="skyblue")
-    ax2.set_title(f"Sales Report - {manager_region}")
-    ax2.set_ylabel("Total Sales")
-    plt.tight_layout()
-
-    region_chart_buf = io.BytesIO()
-    plt.savefig(region_chart_buf, format="png")
-    plt.close(fig2)
-    region_chart_buf.seek(0)
-    region_chart_img = ImageReader(region_chart_buf)
-
-    # === BUILD PDF ===
+    #  Create the PDF buffer and doc structure
     buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
 
-    # Title
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(150, 750, f"Weekly KPI Report - {manager.username}")
+    # ======================================================
+    # EXECUTIVE SUMMARY PAGE
+    # ======================================================
+    elements.append(Paragraph(f"Executive Summary - {manager.region}", styles["Title"]))
+    elements.append(Spacer(1, 0.2 * inch))
 
-    # Greeting
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(100, 720, f"Hello {manager.username},")
-    pdf.drawString(100, 700, "Here is your weekly KPI performance update:")
+    # Compute trends (% changes)
+    sales_trend = calc_trend(current["total_sales"], previous["total_sales"])
+    cust_trend = calc_trend(current["new_customers"], previous["new_customers"])
+    churn_trend = calc_trend(current["churn_rate"], previous["churn_rate"])
 
-    # Insert GLOBAL chart
-    pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(100, 670, "🌍 Global Sales Overview")
-    pdf.drawImage(global_chart_img, 100, 440, width=360, height=200)
+    summary_html = f"""
+        <b>Total Sales:</b> ${current['total_sales']:,} ({sales_trend})<br/>
+        <b>New Customers:</b> {current['new_customers']} ({cust_trend})<br/>
+        <b>Churn Rate:</b> {current['churn_rate']:.2f}% ({churn_trend})<br/>
+    """
+    elements.append(Paragraph(summary_html, styles["Normal"]))
+    elements.append(Spacer(1, 0.4 * inch))
 
-    # Insert REGION-specific details
-    pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(100, 410, f"📊 {manager_region} Region Performance")
-    y = 390
-    for k in region_data:
-        pdf.setFont("Helvetica", 12)
-        pdf.drawString(100, y, f"{k['region']} Sales: ${k['total_sales']:,}")
-        y -= 20
+    # Add Top 3 Categories Pie Chart
+    pie_chart = build_product_chart(product_data[:3], chart_type="pie")
+    if pie_chart:
+        elements.append(Image(pie_chart, width=300, height=200))
 
-    pdf.drawImage(region_chart_img, 100, 160, width=300, height=180)
+    # Add trend comparison table
+    elements.append(Spacer(1, 0.3 * inch))
+    elements.append(build_trend_table(current, previous))
 
-    # Footer
-    pdf.setFont("Helvetica-Oblique", 10)
-    pdf.drawString(100, 140, "Generated by Data Analytics Dashboard")
+    # Page break before detailed report
+    elements.append(PageBreak())
 
-    # Finalize
-    pdf.showPage()
-    pdf.save()
+    # ======================================================
+    # DETAILED REPORT
+    # ======================================================
+    elements.append(Paragraph(f"Weekly KPI Report - {manager.region}", styles["Heading1"]))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Region summary table
+    elements.append(Paragraph("Region Summary", styles["Heading2"]))
+    elements.append(build_kpi_table(region_data))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    # Product table
+    elements.append(Paragraph("Top 5 Product Categories", styles["Heading2"]))
+    elements.append(build_product_table(product_data[:5]))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    # Product charts
+    elements.append(Paragraph("Category Charts", styles["Heading2"]))
+    bar_chart = build_product_chart(product_data[:5], chart_type="bar")
+    pie_chart = build_product_chart(product_data[:5], chart_type="pie")
+    if bar_chart:
+        elements.append(Image(bar_chart, width=400, height=250))
+    if pie_chart:
+        elements.append(Spacer(1, 0.2 * inch))
+        elements.append(Image(pie_chart, width=400, height=250))
+
+    # Build final PDF document
+    doc.build(elements)
     buffer.seek(0)
 
     return buffer
 
 
-def generate_region_pdf(manager):
-    """Generate a PDF with only region-specific KPI data"""
-    # ✅ Get live data from ClickHouse
-    data = fetch_region_kpis(manager.region, date_range="last_7_days")
-
-    if not data:
-        data = [{"region": manager.region, "total_sales": 0, "new_customers": 0, "churn_rate": 0}]
-
-    # Build chart
-    fig, ax = plt.subplots(figsize=(4, 3))
-    regions = [k["region"] for k in data]
-    sales = [k["total_sales"] for k in data]
-    ax.bar(regions, sales, color="skyblue")
-    ax.set_title(f"Sales Report - {manager.region}")
-    ax.set_ylabel("Total Sales")
-    plt.tight_layout()
-
-    chart_buffer = io.BytesIO()
-    plt.savefig(chart_buffer, format="png")
-    plt.close(fig)
-    chart_buffer.seek(0)
-    chart_img = ImageReader(chart_buffer)
-
-    # Build PDF
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=letter)
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(150, 750, f"Weekly KPI Report - {manager.region}")
-
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(100, 720, f"Hello {manager.username},")
-    pdf.drawString(100, 700, "Here are your weekly KPIs:")
-
-    y = 660
-    for k in data:
-        pdf.drawString(100, y, f"Sales: ${k['total_sales']:,}")
-        y -= 20
-        pdf.drawString(100, y, f"New Customers: {k.get('new_customers', 0)}")
-        y -= 20
-        pdf.drawString(100, y, f"Churn Rate: {k.get('churn_rate', 0):.2f}%")
-        y -= 40
-
-    pdf.drawImage(chart_img, 100, 400, width=300, height=200)
-
-    pdf.setFont("Helvetica-Oblique", 10)
-    pdf.drawString(100, 380, "Generated by Data Analytics Dashboard")
-    pdf.showPage()
-    pdf.save()
-    buffer.seek(0)
-
-    return buffer
-
-
+# ======================================================
+# Celery Task (optional async execution)
+# ======================================================
 @celery.task
-def send_weekly_reports():
-    """Celery task to email all managers with global + region-specific KPI reports"""
-    with flask_app.app_context():
-        managers = User.query.filter_by(role="manager").all()
+def send_weekly_manager_report(manager_data):
+    """
+    Celery task to generate and email the weekly manager report.
+    manager_data should include: { 'username': str, 'region': str, 'email': str }
+    """
+    class Manager:
+        def __init__(self, username, region, email):
+            self.username = username
+            self.region = region
+            self.email = email
 
-        for manager in managers:
-            # Use combined PDF (global + region) OR switch to region-only if preferred
-            pdf_buffer = generate_combined_pdf(manager)
-            # pdf_buffer = generate_region_pdf(manager)  # <- alternative
+    manager = Manager(
+        username=manager_data.get("username", "Manager"),
+        region=manager_data.get("region", "All"),
+        email=manager_data.get("email", None),
+    )
 
-            manager_region = getattr(manager, "region", "NA")
+    pdf_buffer = generate_region_pdf(manager)
 
-            msg = Message(
-                subject="Weekly KPI Report",
-                recipients=[manager.email],
-                body=(
-                    f"Hello {manager.username},\n\n"
-                    f"Attached is your weekly KPI report with global and {manager_region} insights."
-                )
-            )
-            msg.attach("weekly_report.pdf", "application/pdf", pdf_buffer.read())
-            mail.send(msg)
+    # TODO: integrate email sending logic here (e.g. using smtplib or SendGrid)
+    # Example:
+    # send_email_with_attachment(manager.email, "Weekly KPI Report", pdf_buffer)
 
-        return f"✅ Sent combined reports to {[m.email for m in managers]}"
+    print(f"✅ Weekly PDF report generated for {manager.username} ({manager.region})")
+
+    return True
