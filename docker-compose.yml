@@ -12,37 +12,46 @@ services:
       - redis
       - postgres
     environment:
-      - FLASK_ENV=development
-      - FLASK_APP=app:create_app
+      FLASK_ENV: development
+      FLASK_APP: app:create_app
+    env_file:
+      - ./backend/.env
     volumes:
       - ./backend:/app
     ports:
       - "5000:5000"
-    env_file:
-      - ./backend/.env
     restart: always
+    networks:
+      - dashboard-net
 
   celery-worker:
-    build: ./backend
-    command: sh -c "./wait-for-clickhouse.sh clickhouse 9000 && celery -A celery_worker.celery worker --loglevel=INFO --pool=solo"
-    
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dashboard-celery
+    command: ["/bin/bash", "-c", "/app/wait-for-clickhouse.sh && celery -A celery_worker.celery worker --loglevel=INFO --pool=solo"]
     depends_on:
       - redis
       - clickhouse
       - postgres
+    env_file:
+      - ./backend/.env
     environment:
-      - CLICKHOUSE_HOST=clickhouse
-      - CLICKHOUSE_PORT=8123
-      - CLICKHOUSE_USER=default
-      - CLICKHOUSE_PASSWORD=
-      - CLICKHOUSE_DATABASE=analytics
-      - CELERY_BROKER_URL=redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    restart: always
+    networks:
+      - dashboard-net
 
   redis:
     image: redis/redis-stack-server:latest
     container_name: redis
     ports:
       - "6379:6379"
+    restart: always
+    networks:
+      - dashboard-net
 
   clickhouse:
     image: clickhouse/clickhouse-server:latest
@@ -56,6 +65,10 @@ services:
       CLICKHOUSE_PASSWORD: mypassword
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse-init:/docker-entrypoint-initdb.d
+    restart: always
+    networks:
+      - dashboard-net
 
   postgres:
     image: postgres:15
@@ -68,9 +81,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
     networks:
-      - default
+      - dashboard-net
 
 volumes:
   clickhouse_data:
   postgres_data:
+
+networks:
+  dashboard-net:
+    driver: bridge

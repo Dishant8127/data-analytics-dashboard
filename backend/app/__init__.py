@@ -1,28 +1,18 @@
-# # backend/app/__init__.py
 
+# backend/app/__init__.py
 import os
 from dotenv import load_dotenv
-
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager
-from flask_bcrypt import Bcrypt
-from flask_mail import Mail
 from flask_cors import CORS
-from flask_caching import Cache
-from flask_migrate import Migrate
 from clickhouse_connect import get_client as get_ch_client
 
-# Load environment variables from .env
+from extensions import db, mail, bcrypt, jwt, cache, migrate
+from app.api.routes import api_bp
+from app.auth.routes import auth_bp
+
+# Load environment variables
 load_dotenv()
 
-# Global extension instances
-db = SQLAlchemy()
-jwt = JWTManager()
-bcrypt = Bcrypt()
-mail = Mail()
-cache = Cache()
-migrate = Migrate()
 clickhouse_client = None
 
 
@@ -43,11 +33,11 @@ def create_app():
     app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
     app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
 
-    # Redis / Cache
+    # Cache
     app.config["CACHE_TYPE"] = "RedisCache"
     app.config["CACHE_REDIS_URL"] = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
-    # Init extensions
+    # Initialize all extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
@@ -55,12 +45,15 @@ def create_app():
     mail.init_app(app)
     cache.init_app(app)
 
-    #  CORS fix → allow frontend + expose headers for file download
+    # CORS
     CORS(
         app,
-        resources={r"/api/*": {"origins": ["http://localhost:5173"]}, r"/auth/*": {"origins": ["http://localhost:5173"]}},
+        resources={
+            r"/api/*": {"origins": ["http://localhost:5173"]},
+            r"/auth/*": {"origins": ["http://localhost:5173"]},
+        },
         supports_credentials=True,
-        expose_headers=["Content-Disposition"]
+        expose_headers=["Content-Disposition"],
     )
 
     # ClickHouse client
@@ -77,8 +70,6 @@ def create_app():
         clickhouse_client = None
 
     # Blueprints
-    from app.api.routes import api_bp
-    from app.auth.routes import auth_bp
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/auth")
 
@@ -87,4 +78,3 @@ def create_app():
         return {"status": "ok"}
 
     return app
-

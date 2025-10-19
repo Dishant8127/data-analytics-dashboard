@@ -58,3 +58,12 @@ backend/.env
 
 # Ignore Docker volumes (if mounted locally)
 data/
+
+
+run_report.py
+create_user.py
+new_user.py
+
+
+clickhouse-init/
+

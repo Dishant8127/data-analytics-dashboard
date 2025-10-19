@@ -1,0 +1,40 @@
+from reportlab.platypus import SimpleDocTemplate, Spacer, Image, Paragraph, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from db.clickhouse_client import fetch_region_kpis, fetch_region_product_kpis
+from utils.pdf_utils import build_kpi_table, build_product_table, build_product_chart
+import io
+from reportlab.platypus import Paragraph
+
+
+def generate_region_pdf(manager):
+    """Generate the PDF report for a manager's region."""
+    region_data = fetch_region_kpis(manager.region, date_range="last_7_days")
+    if not region_data:
+        region_data = [{"region": manager.region, "total_sales": 0, "new_customers": 0, "churn_rate": 0}]
+    product_data = fetch_region_product_kpis(manager.region, date_range="last_7_days")
+    if not product_data:
+        product_data = [{"product_category": "N/A", "total_sales": 0, "new_customers": 0, "churn_rate": 0}]
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Title
+    # elements.append(styles["Heading1"](f"Weekly KPI Report - {manager.region}"))
+    elements.append(Paragraph(f"Weekly KPI Report - {manager.region}", styles["Heading1"]))
+    elements.append(build_kpi_table(region_data))
+    elements.append(Spacer(1, 20))
+    elements.append(styles["Heading2"]("Top Product Categories"))
+    elements.append(build_product_table(product_data[:5]))
+    elements.append(Spacer(1, 20))
+    elements.append(styles["Heading2"]("Category Charts"))
+    bar_chart = build_product_chart(product_data[:5], "bar")
+    pie_chart = build_product_chart(product_data[:5], "pie")
+    elements.append(Image(bar_chart, width=400, height=250))
+    elements.append(Spacer(1, 12))
+    elements.append(Image(pie_chart, width=400, height=250))
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer

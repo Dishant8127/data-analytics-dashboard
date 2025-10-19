@@ -80,14 +80,24 @@ import clickhouse_connect
 from config import Config
 import os
 
+# client = clickhouse_connect.get_client(
+#     # host="clickhouse",
+#     # port=8123,        # ✅ use HTTP port
+#     # username="default",
+#     # password="mypassword",
+#     # database="analytics"
+#     host=os.getenv("CLICKHOUSE_HOST", "localhost"),
+#     port=int(os.getenv("CLICKHOUSE_PORT", 8123)),
+#     username=os.getenv("CLICKHOUSE_USER", "default"),
+#     password=os.getenv("CLICKHOUSE_PASSWORD", ""),
+#     database=os.getenv("CLICKHOUSE_DATABASE", "analytics"),
+# )
+
+
 client = clickhouse_connect.get_client(
-    # host="clickhouse",
-    # port=8123,        # ✅ use HTTP port
-    # username="default",
-    # password="mypassword",
-    # database="analytics"
-    host=os.getenv("CLICKHOUSE_HOST", "localhost"),
-    port=int(os.getenv("CLICKHOUSE_PORT", 8123)),
+    # host="host.docker.internal",
+    host="clickhouse",  # 👈 changed from 'clickhouse'
+    port=8123,
     username=os.getenv("CLICKHOUSE_USER", "default"),
     password=os.getenv("CLICKHOUSE_PASSWORD", ""),
     database=os.getenv("CLICKHOUSE_DATABASE", "analytics"),

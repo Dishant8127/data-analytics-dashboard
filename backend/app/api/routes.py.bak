@@ -23,9 +23,7 @@ from reportlab.lib.units import inch
 # project imports
 from db.clickhouse_client import fetch_region_kpis, fetch_region_product_kpis
 from utils.pdf_utils import build_kpi_table, build_product_table
-# from tasks import generate_region_pdf
-from utils.report_generation import generate_region_pdf
-
+from tasks import generate_region_pdf
 
 api_bp = Blueprint("api", __name__)
 
